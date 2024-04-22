@@ -250,7 +250,7 @@ fn install(config: &mut Config, path: PathBuf, force: bool) {
 	builder.fetch_options(fetch);
 
 	let repo = builder
-		.clone("https://github.com/geode-sdk/geode", &path)
+		.clone("https://github.com/TheSillyDoggo/geode", &path)
 		.nice_unwrap("Could not download SDK");
 
 	// set GEODE_SDK environment variable;
