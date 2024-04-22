@@ -461,7 +461,7 @@ fn install_binaries(config: &mut Config, platform: Option<String>, version: Opti
 
 	let res = reqwest::blocking::Client::new()
 		.get(format!(
-			"https://api.github.com/repos/geode-sdk/geode/releases/tags/{}",
+			"https://api.github.com/repos/TheSillyDoggo/geode/releases/tags/{}",
 			release_tag
 		))
 		.header(USER_AGENT, "github_api/1.0")
