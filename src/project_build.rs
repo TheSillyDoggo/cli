@@ -6,6 +6,7 @@ pub fn build_project(
 	platform: Option<PlatformName>,
 	configure_only: bool,
 	build_only: bool,
+	ninja: bool,
 	ndk_path: Option<String>,
 	config_type: Option<String>,
 	extra_conf_args: Vec<String>,
@@ -72,6 +73,8 @@ pub fn build_project(
 				}
 
 				conf_args.push("-DHOST_ARCH=x64".to_owned());
+			} else if ninja {
+				conf_args.extend(["-G", "Ninja"].map(String::from));
 			} else {
 				conf_args.extend(["-A", "x64"].map(String::from));
 			}

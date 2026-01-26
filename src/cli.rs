@@ -87,6 +87,10 @@ pub enum GeodeCommands {
 		#[clap(long, short, default_value_t = false)]
 		build_only: bool,
 
+		/// Whether to explicitly use Ninja instead of the VS generator (Windows only)
+		#[clap(long, default_value_t = false)]
+		ninja: bool,
+
 		/// Android NDK path, uses ANDROID_NDK_ROOT env var otherwise
 		#[clap(long)]
 		ndk: Option<String>,
