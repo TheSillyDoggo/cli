@@ -1,6 +1,6 @@
 use crate::logging::ask_value;
 use crate::mod_file::{PlatformName, ToGeodeString};
-use crate::util::mod_file::{DependencyImportance, GDVersion};
+use crate::util::mod_file::GDVersion;
 use crate::{done, fail, fatal, index, info, warn, NiceUnwrap};
 use crate::{
 	file::read_dir_recursive,
@@ -158,10 +158,7 @@ impl Found {
 	}
 }
 
-fn find_existing_dependency(
-	dep: &Dependency,
-	_config: &Config,
-) -> Result<Found, String> {
+fn find_existing_dependency(dep: &Dependency, _config: &Config) -> Result<Found, String> {
 	let mut path = env::temp_dir();
 	path.push(format!("{}.geode", dep.id));
 
@@ -302,30 +299,28 @@ pub fn check_dependencies(
 	// Check if platform is supported
 	match mod_info.gd {
 		GDVersion::Simple(_) => {}
-		GDVersion::Detailed(gd) => {
-			match platform {
-				PlatformName::Windows => {
-					if gd.win.is_none() {
-						fatal!("Geometry Dash version not specified for Windows, please specify one in mod.json");
-					}
-				}
-				PlatformName::MacOS | PlatformName::MacArm | PlatformName::MacIntel => {
-					if gd.mac.is_none() {
-						fatal!("Geometry Dash version not specified for macOS, please specify one in mod.json");
-					}
-				}
-				PlatformName::Android | PlatformName::Android32 | PlatformName::Android64 => {
-					if gd.android.is_none() {
-						fatal!("Geometry Dash version not specified for Android, please specify one in mod.json");
-					}
-				}
-				PlatformName::Ios => {
-					if gd.ios.is_none() {
-						fatal!("Geometry Dash version not specified for iOS, please specify one in mod.json");
-					}
+		GDVersion::Detailed(gd) => match platform {
+			PlatformName::Windows => {
+				if gd.win.is_none() {
+					fatal!("Geometry Dash version not specified for Windows, please specify one in mod.json");
 				}
 			}
-		}
+			PlatformName::MacOS | PlatformName::MacArm | PlatformName::MacIntel => {
+				if gd.mac.is_none() {
+					fatal!("Geometry Dash version not specified for macOS, please specify one in mod.json");
+				}
+			}
+			PlatformName::Android | PlatformName::Android32 | PlatformName::Android64 => {
+				if gd.android.is_none() {
+					fatal!("Geometry Dash version not specified for Android, please specify one in mod.json");
+				}
+			}
+			PlatformName::Ios => {
+				if gd.ios.is_none() {
+					fatal!("Geometry Dash version not specified for iOS, please specify one in mod.json");
+				}
+			}
+		},
 	}
 
 	// If no dependencies, skippy wippy
@@ -437,8 +432,7 @@ pub fn check_dependencies(
 			info!("Dependency '{}' found in cache", dep.id);
 			path_to_dep_geode = inst_path;
 			_geode_info = inst_info;
-		}
-		else {
+		} else {
 			// check index
 			let found_in_index = match find_index_dependency(dep, &config) {
 				Ok(f) => f,
@@ -456,7 +450,7 @@ pub fn check_dependencies(
 			if !matches!(found_in_index, Found::Some(_, _))
 				&& !matches!(found_in_installed, Found::Some(_, _))
 			{
-				if dep.importance == DependencyImportance::Required {
+				if dep.required {
 					fail!(
 						"Dependency '{0}' not found in installed mods nor index! \
 						If this is a mod that hasn't been published yet, install it \
@@ -604,14 +598,7 @@ pub fn check_dependencies(
 		// know if to link or not)
 		fs::write(
 			dep_dir.join(&dep.id).join("geode-dep-options.json"),
-			format!(
-				r#"{{ "required": {} }}"#,
-				if dep.importance == DependencyImportance::Required {
-					"true"
-				} else {
-					"false"
-				}
-			),
+			format!(r#"{{ "required": {} }}"#, dep.required),
 		)
 		.nice_unwrap("Unable to save dep options");
 	}

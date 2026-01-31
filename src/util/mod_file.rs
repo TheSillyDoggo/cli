@@ -283,7 +283,7 @@ fn all_platforms() -> HashSet<PlatformName> {
 	])
 }
 
-#[derive(Default, Deserialize, PartialEq)]
+#[derive(Default, Deserialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum DependencyImportance {
 	#[default]
@@ -298,8 +298,9 @@ pub struct Dependency {
 	pub id: String,
 	#[serde(deserialize_with = "parse_comparable_version")]
 	pub version: VersionReq,
+	pub importance: Option<DependencyImportance>,
 	#[serde(default)]
-	pub importance: DependencyImportance,
+	pub required: bool,
 	#[serde(default = "all_platforms")]
 	pub platforms: HashSet<PlatformName>,
 }
@@ -359,7 +360,8 @@ where
 						Ok(version) => Ok(Dependency {
 							id: id.clone(),
 							version,
-							importance: DependencyImportance::Required,
+							importance: Some(DependencyImportance::Required),
+							required: true,
 							platforms: all_platforms(),
 						}),
 						// Longhand is "[mod.id]": { ... }
@@ -367,6 +369,9 @@ where
 							// The ID isn't parsed from the object itself but is the key
 							.map(|mut d| {
 								d.id.clone_from(&id);
+								if let Some(i) = &d.importance {
+									d.required = *i == DependencyImportance::Required;
+								}
 								d
 							})
 							.map_err(D::Error::custom),
@@ -386,7 +391,8 @@ where
 							Dependency {
 								id: dep.id,
 								version: dep.version,
-								importance: dep.importance,
+								importance: Some(dep.importance.clone()),
+								required: dep.importance == DependencyImportance::Required,
 								platforms: dep.platforms,
 							},
 						);
